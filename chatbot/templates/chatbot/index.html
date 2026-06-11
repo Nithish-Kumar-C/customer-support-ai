@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support AI</title>
+    <style>
+        /* ── Reset & Base ─────────────────────────────────────── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Main container ───────────────────────────────────── */
+        .container {
+            width: 100%;
+            max-width: 820px;
+            height: 92vh;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Header ───────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #1565c0, #0d47a1);
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        .avatar {
+            width: 42px; height: 42px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .header p  { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+
+        .status-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            background: #69f0ae;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0.4; }
+        }
+
+        /* ── Upload bar ───────────────────────────────────────── */
+        .upload-bar {
+            background: #e3f2fd;
+            border-bottom: 1px solid #bbdefb;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .upload-bar label {
+            cursor: pointer;
+            background: #1565c0;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .upload-bar label:hover { background: #0d47a1; }
+        .upload-bar input[type="file"] { display: none; }
+        #upload-status { font-size: 12px; color: #388e3c; }
+
+        /* ── Chat area ────────────────────────────────────────── */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #fafafa;
+        }
+
+        .chat-area::-webkit-scrollbar { width: 5px; }
+        .chat-area::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+        /* ── Message bubbles ──────────────────────────────────── */
+        .message { display: flex; gap: 10px; max-width: 80%; }
+
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message.bot  { align-self: flex-start; }
+
+        .msg-avatar {
+            width: 34px; height: 34px; min-width: 34px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            background: #e3f2fd;
+        }
+
+        .message.user .msg-avatar { background: #e8f5e9; }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 100%;
+        }
+
+        .message.user .bubble {
+            background: #1565c0;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .msg-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .message.bot .msg-time { text-align: left; }
+
+        /* ── Typing indicator ─────────────────────────────────── */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            gap: 5px;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .typing-indicator.visible { display: flex; }
+
+        .dot {
+            width: 8px; height: 8px;
+            background: #90a4ae;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-5px); }
+        }
+
+        /* ── Suggested questions ──────────────────────────────── */
+        .suggestions {
+            padding: 12px 20px;
+            border-top: 1px solid #f0f0f0;
+            background: white;
+        }
+
+        .suggestions p {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .chip:hover { background: #bbdefb; }
+
+        /* ── Input area ───────────────────────────────────────── */
+        .input-area {
+            padding: 14px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #question-input {
+            flex: 1;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            max-height: 100px;
+            overflow-y: auto;
+            line-height: 1.5;
+            transition: border-color 0.2s;
+        }
+
+        #question-input:focus { border-color: #1565c0; }
+
+        #question-input::placeholder { color: #bbb; }
+
+        #send-btn {
+            width: 44px; height: 44px;
+            background: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, transform 0.1s;
+            flex-shrink: 0;
+        }
+
+        #send-btn:hover   { background: #0d47a1; }
+        #send-btn:active  { transform: scale(0.95); }
+        #send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* ── Welcome message ──────────────────────────────────── */
+        .welcome {
+            text-align: center;
+            padding: 32px 20px;
+            color: #888;
+        }
+
+        .welcome .icon { font-size: 48px; margin-bottom: 12px; }
+        .welcome h3 { font-size: 18px; color: #444; margin-bottom: 8px; }
+        .welcome p  { font-size: 14px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ── HEADER ─────────────────────────────────────────────── -->
+    <div class="header">
+        <div class="header-left">
+            <div class="avatar">🤖</div>
+            <div>
+                <h1>Customer Support AI</h1>
+                <p>Powered by TinyLlama + RAG</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Online
+        </div>
+    </div>
+
+    <!-- ── UPLOAD BAR ─────────────────────────────────────────── -->
+    <div class="upload-bar">
+        📄 Upload your support document (PDF):
+        <label for="pdf-upload">Choose PDF</label>
+        <input type="file" id="pdf-upload" accept=".pdf" onchange="uploadPDF(this)">
+        <span id="upload-status"></span>
+    </div>
+
+    <!-- ── CHAT AREA ──────────────────────────────────────────── -->
+    <div class="chat-area" id="chat-area">
+        <div class="welcome" id="welcome-msg">
+            <div class="icon">💬</div>
+            <h3>Hello! How can I help you today?</h3>
+            <p>I can answer questions about refunds, orders, account issues,<br>billing, and more. Try asking a question below!</p>
+        </div>
+    </div>
+
+    <!-- ── TYPING INDICATOR ───────────────────────────────────── -->
+    <div class="typing-indicator" id="typing">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- ── SUGGESTED QUESTIONS ───────────────────────────────── -->
+    <div class="suggestions">
+        <p>Suggested questions:</p>
+        <div class="suggestion-chips">
+            <button class="chip" onclick="sendChip(this)">How do I reset my password?</button>
+            <button class="chip" onclick="sendChip(this)">I want a refund</button>
+            <button class="chip" onclick="sendChip(this)">Track my order</button>
+            <button class="chip" onclick="sendChip(this)">Cancel subscription</button>
+            <button class="chip" onclick="sendChip(this)">Billing issue</button>
+        </div>
+    </div>
+
+    <!-- ── INPUT AREA ─────────────────────────────────────────── -->
+    <div class="input-area">
+        <textarea
+            id="question-input"
+            placeholder="Type your question here..."
+            rows="1"
+            onkeydown="handleKeyDown(event)"
+            oninput="autoResize(this)"
+        ></textarea>
+        <button id="send-btn" onclick="sendMessage()" title="Send">➤</button>
+    </div>
+
+</div>
+
+<script>
+    // ── Helpers ──────────────────────────────────────────────────
+    function getTime() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+
+    function scrollBottom() {
+        const area = document.getElementById('chat-area');
+        area.scrollTop = area.scrollHeight;
+    }
+
+    function hideWelcome() {
+        const w = document.getElementById('welcome-msg');
+        if (w) w.remove();
+    }
+
+    // ── Render a message bubble ───────────────────────────────────
+    function addMessage(text, role) {
+        hideWelcome();
+
+        const area    = document.getElementById('chat-area');
+        const isUser  = role === 'user';
+        const wrapper = document.createElement('div');
+
+        wrapper.className = `message ${role}`;
+        wrapper.innerHTML = `
+            <div class="msg-avatar">${isUser ? '👤' : '🤖'}</div>
+            <div>
+                <div class="bubble">${text}</div>
+                <div class="msg-time">${getTime()}</div>
+            </div>
+        `;
+
+        area.appendChild(wrapper);
+        scrollBottom();
+    }
+
+    // ── Send message ──────────────────────────────────────────────
+    async function sendMessage() {
+        const input    = document.getElementById('question-input');
+        const sendBtn  = document.getElementById('send-btn');
+        const typing   = document.getElementById('typing');
+        const question = input.value.trim();
+
+        if (!question) return;
+
+        // Show user message
+        addMessage(question, 'user');
+        input.value = '';
+        input.style.height = 'auto';
+
+        // Show typing indicator
+        sendBtn.disabled = true;
+        typing.classList.add('visible');
+        document.getElementById('chat-area').appendChild(typing);
+        scrollBottom();
+
+        try {
+            const response = await fetch('/ask/', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ question })
+            });
+
+            const data = await response.json();
+
+            typing.classList.remove('visible');
+            sendBtn.disabled = false;
+
+            if (data.answer) {
+                addMessage(data.answer, 'bot');
+            } else {
+                addMessage('Sorry, I could not get an answer. Please try again.', 'bot');
+            }
+
+        } catch (err) {
+            typing.classList.remove('visible');
+            sendBtn.disabled = false;
+            addMessage('Connection error. Please make sure the server is running.', 'bot');
+        }
+    }
+
+    // ── Keyboard: Enter to send, Shift+Enter for new line ─────────
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    // ── Suggestion chips ──────────────────────────────────────────
+    function sendChip(btn) {
+        document.getElementById('question-input').value = btn.textContent;
+        sendMessage();
+    }
+
+    // ── PDF Upload ────────────────────────────────────────────────
+    async function uploadPDF(input) {
+        const status = document.getElementById('upload-status');
+        const file   = input.files[0];
+        if (!file) return;
+
+        status.textContent = 'Uploading...';
+        status.style.color = '#1565c0';
+
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        try {
+            const response = await fetch('/upload/', {
+                method: 'POST',
+                body:   formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                status.textContent = '✓ ' + data.message;
+                status.style.color = '#388e3c';
+            } else {
+                status.textContent = '✗ ' + data.error;
+                status.style.color = '#c62828';
+            }
+        } catch (err) {
+            status.textContent = '✗ Upload failed';
+            status.style.color = '#c62828';
+        }
+    }
+</script>
+
+</body>
+</html>

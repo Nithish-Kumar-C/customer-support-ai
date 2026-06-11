@@ -1,0 +1,14 @@
+django==4.2
+langchain==0.1.16
+langchain-community==0.0.34
+chromadb==1.0.15
+sentence-transformers==2.7.0
+pypdf==4.2.0
+transformers==4.40.0
+peft==0.10.0
+accelerate==0.29.3
+bitsandbytes==0.43.1
+trl==0.8.6
+datasets==2.19.0
+torch==2.2.2
+huggingface-hub==0.22.2
