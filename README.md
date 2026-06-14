@@ -113,37 +113,4 @@ refunds, orders, billing, and account issues — good enough for the interview d
 
 ---
 
-## Interview answers you must know
 
-**Q: What is LoRA?**
-LoRA stands for Low-Rank Adaptation. Instead of retraining all 1.1 billion
-parameters of TinyLlama, LoRA adds small trainable matrices to specific attention
-layers. Only 0.19% of parameters are trained, making it possible on a free GPU.
-
-**Q: What is RAG?**
-Retrieval-Augmented Generation. Instead of relying only on what the model learned
-during training, RAG retrieves relevant information from a knowledge base at
-runtime. This keeps answers accurate and up to date.
-
-**Q: Why combine fine-tuning AND RAG?**
-Fine-tuning teaches the model to respond in a specific customer support style and
-tone. RAG provides accurate factual information from company documents. Together
-they give both style and accuracy.
-
-**Q: What is ChromaDB?**
-A vector database that stores text as numerical vectors called embeddings.
-When a question comes in, ChromaDB finds the most similar chunks using cosine
-similarity and returns them to the LLM as context.
-
-**Q: What is an embedding?**
-A way to convert text into a list of numbers that captures its meaning. Similar
-sentences have embeddings that are close together in vector space. I used
-HuggingFace's all-MiniLM-L6-v2 model to create embeddings.
-
-**Q: Explain your project architecture end to end.**
-The user types a question in the Django frontend. JavaScript sends it as a POST
-request to the /ask/ API endpoint. The Django view calls rag_engine.py which
-retrieves the top 3 relevant chunks from ChromaDB using cosine similarity on
-HuggingFace embeddings. These chunks plus the question are passed to the
-fine-tuned TinyLlama model which generates a customer support response.
-The answer is returned as JSON and displayed in the chat UI.
